@@ -17,7 +17,6 @@ def get_stock_data(ticker, period):
 
 def get_support_resistance_levels(stock_data):
     dataset = list(zip(list(range(0, len(stock_data))), list(stock_data)))
-    print(stock_data.index[0], stock_data.index[-1], 'start and end')
     max_cluster_count = 10
     models = []
     scores = []
@@ -55,12 +54,11 @@ def filter_levels(levels):
             diff = np.sum((normalized_levels[i] - normalized_levels[j]) ** 2)
             difference_matrix[i][j] = diff
             difference_matrix[j][i] = diff
-    print('Difference Matrix\n', difference_matrix)
+
     indices = np.where(difference_matrix < 0.015)
     new_price_levels = [price_levels[i] for i in range(no_levels)]
     counts = [1 for _ in range(no_levels)]
     for x, y in zip(indices[0], indices[1]):
-        print(x, y)
         if x != y:
             new_price_levels[max(x, y)] += price_levels[min(x, y)]
             counts[max(x, y)] += 1
