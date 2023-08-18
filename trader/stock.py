@@ -1,62 +1,111 @@
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from trader.relative_strength_index import *
-from trader.support_and_resistance import *
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+
+from trader.rsi import *
+from trader.rsl import *
+from trader.trend import *
+
+FIGURE_DIM = (14, 8)
+FROM_DATE = "2020-01-01"
+FOCUS_WINDOW_SIZE = DAYS['2yr']
+COMPUTE_EVERY = DAYS['2wk']
+DECREASE_CHECK = DAYS['2wk']
+TREND_ANALYSER_DAYS = DAYS['1yr']
+TREND_ANALYSER_EVERY = DAYS['2mo']
+CANDLE_PLOT = False
+POSITIVE_COLOR = 'green'
+NEUTRAL_COLOR = 'orange'
+NEGATIVE_COLOR = 'red'
 
 
 class Stock:
-    def __init__(self, ticker: str, period: str):
+    def __init__(self, ticker: str):
+        self.compute_every = COMPUTE_EVERY
+        self.decrease_check = DECREASE_CHECK
+        self.focus_window_size = FOCUS_WINDOW_SIZE
+        self.plot_candles = CANDLE_PLOT
+        self.trend_analyser_days = TREND_ANALYSER_DAYS
+        self.trend_analyse_every = TREND_ANALYSER_EVERY
+        self.fig, self.ax = plt.subplots(2, 1, figsize=FIGURE_DIM)
+        self.fig.suptitle(ticker)
+
         self.ticker = ticker
         self.levels = []
-        self.compute_every = 7
-        self.computed_till = 0
-        self.level_window = 30
+        self.processed_till = 0
+        self.rsl_window = 30
         self.rsi_window = 14
-        self.decrease_check = 14
-        self.stock_prices = yf.download(ticker, start="2018-01-01")['Close']
+        self.current_trend = TREND.NEUTRAL
+        self.stock_prices = yf.download(ticker, start=FROM_DATE)
         self.rs_indices = pd.Series(data=[50] * self.rsi_window, index=list(self.stock_prices.index[:self.rsi_window]))
-        self.working_data = self.stock_prices[:self.computed_till]
-        self.fig, self.ax = plt.subplots(2, 1, figsize=(16, 8))
-        self.fig.suptitle(self.ticker)
-        self.focus_window_size = 300
+        self.working_data = self.stock_prices[:self.processed_till]
 
-    def process_data(self):
+    def process_data(self, show_simulation=True, verbose=True):
         while True:
-            if self.computed_till % self.compute_every == 0 and self.computed_till >= self.level_window:
-                segment = self.working_data[-self.level_window:]
+            if self.processed_till % self.compute_every == 0 and self.processed_till >= self.rsl_window:
+                segment = self.working_data[-self.rsl_window:]['Close']
                 self.levels = self.levels + get_support_resistance_levels(segment)
-                self.levels = filter_levels(self.levels)
-            if self.computed_till > self.rsi_window:
-                rsi_score = calculate_rsi(self.working_data, window_size=self.rsi_window)
+                self.levels = filter_levels(self.levels, current_date=segment.index[-1], verbose=verbose)
+            if self.processed_till > self.rsi_window:
+                rsi_score = calculate_rsi(self.working_data['Close'], window_size=self.rsi_window)
                 self.rs_indices = pd.concat([self.rs_indices, rsi_score])
-            self.plotter()
+            if self.processed_till > self.trend_analyser_days and self.processed_till % self.trend_analyse_every == 0:
+                trend_samples = self.working_data['Close'][-self.trend_analyser_days::5]
+                self.current_trend = analyse_trend(trend_samples)
+            if show_simulation:
+                self.plotter()
             self.working_data = pd.concat(
-                [self.working_data, self.stock_prices[self.computed_till: self.computed_till + 1]])
-            self.computed_till += 1
+                [self.working_data, self.stock_prices[self.processed_till: self.processed_till + 1]])
+            self.processed_till += 1
             if self.working_data.shape == self.stock_prices.shape:
                 break
+        print('[INFO] PROCESSED UNTIL', self.working_data.index[-1])
+        print_table(rows=self.levels, headers=['Date', 'Price'])
 
-    def plotter(self):
+    def plotter(self, save_path=None):
         if len(self.working_data) == 0 or len(self.rs_indices) == 0:
             return
-        price_decreasing = False
-        if len(self.working_data) >= self.decrease_check:
-            price_decreasing = True if self.working_data[-1] < self.working_data[-self.decrease_check] else False
         below_30 = True if float(self.rs_indices[-1]) <= 30 else False
         above_70 = True if float(self.rs_indices[-1]) >= 70 else False
-        price_color = 'red' if price_decreasing else 'blue'
-        rsi_color = 'green' if above_70 else ('red' if below_30 else 'blue')
-        self.ax[0].plot(self.working_data[-self.focus_window_size:], c=price_color)
+        price_color = POSITIVE_COLOR if self.current_trend == TREND.UPWARD else (NEGATIVE_COLOR if self.current_trend == TREND.DOWNWARD else NEUTRAL_COLOR)
+        rsi_color = POSITIVE_COLOR if above_70 else (NEGATIVE_COLOR if below_30 else NEUTRAL_COLOR)
+        working_data = self.working_data[-self.focus_window_size:]
+        if self.plot_candles:
+            up = working_data[working_data['Close'] >= working_data['Open']]
+            down = working_data[working_data['Close'] < working_data['Open']]
+            width = 0.5
+            width2 = 0.05
+            # Plotting up prices of stock
+            self.ax[0].bar(up.index, up['Close'] - up['Open'], width, bottom=up['Open'], color=POSITIVE_COLOR)
+            self.ax[0].bar(up.index, up['High'] - up['Close'], width2, bottom=up['Close'], color=POSITIVE_COLOR)
+            self.ax[0].bar(up.index, up['Low'] - up['Open'], width2, bottom=up['Open'], color=POSITIVE_COLOR)
+            # Plotting down prices of stock
+            self.ax[0].bar(down.index, down['Close'] - down['Open'], width, bottom=down['Open'], color=NEGATIVE_COLOR)
+            self.ax[0].bar(down.index, down['High'] - down['Open'], width2, bottom=down['Open'], color=NEGATIVE_COLOR)
+            self.ax[0].bar(down.index, down['Low'] - down['Close'], width2, bottom=down['Close'], color=NEGATIVE_COLOR)
+
+        self.ax[0].plot(working_data[-self.focus_window_size:]['Close'], c=price_color)
         self.ax[1].plot(self.rs_indices[-self.focus_window_size:], c=rsi_color)
         self.ax[1].axhline(70, c='orange', linestyle='--')
         self.ax[1].axhline(30, c='orange', linestyle='--')
         for level in self.levels:
             self.ax[0].axhline(level[1], c='g', linestyle='--')
             # self.ax[0].scatter(level[0], level[1])
-        plt.draw()
-        plt.pause(0.1)
+
+        if save_path is None:
+            plt.draw()
+            plt.pause(0.05)
+        else:
+            plt.savefig(save_path)
         self.ax[0].cla()
         self.ax[1].cla()
+
+    def save_model(self):
+        model = {
+            'ticker': self.ticker,
+            'process_parameters': {
+                'rsl_window': self.rsl_window,
+                'rsi_window': self.rsi_window
+            },
+            'levels': self.levels,
+            'processed_till': self.working_data.index[-1],
+            'processed_from': FROM_DATE
+        }
