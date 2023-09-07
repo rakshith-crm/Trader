@@ -9,6 +9,8 @@ from trader.utils import *
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
+THRESHOLD = 0.001
+
 
 def get_support_resistance_levels(stock_data):
     dataset = list(zip(list(range(0, len(stock_data))), list(stock_data)))
@@ -51,7 +53,7 @@ def filter_levels(levels, current_date, remove_old_levels=False, verbose=False):
             difference_matrix[i][j] = diff
             difference_matrix[j][i] = diff
 
-    indices = np.where(difference_matrix < 0.015)
+    indices = np.where(difference_matrix < THRESHOLD)
     new_price_levels = [price_levels[i] for i in range(no_levels)]
     counts = [1 for _ in range(no_levels)]
     for x, y in zip(indices[0], indices[1]):

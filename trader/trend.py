@@ -6,12 +6,13 @@ class TREND(Enum):
     UPWARD = 1
     DOWNWARD = -1
     NEUTRAL = 0
-    THRESHOLD = 0.1
+    THRESHOLD = 0.01
 
 
-def analyse_trend(prices):
+def analyse_trend(prices, verbose=True):
     slope = stats.linregress(list(range(0, len(prices))), prices).slope
-    print('SLOPE_VALUE: ', slope)
+    if verbose:
+        print('SLOPE_VALUE: ', slope)
     if slope > TREND.THRESHOLD.value:
         return TREND.UPWARD
     elif slope < -TREND.THRESHOLD.value:
