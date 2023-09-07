@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from trader.rsi import *
 from trader.rsl import *
 from trader.trend import *
+from trader.display import *
 
 FIGURE_DIM = (14, 8)
 FROM_DATE = "2020-01-01"
@@ -10,11 +11,32 @@ FOCUS_WINDOW_SIZE = DAYS['2yr']
 COMPUTE_EVERY = DAYS['2wk']
 DECREASE_CHECK = DAYS['2wk']
 TREND_ANALYSER_DAYS = DAYS['1yr']
-TREND_ANALYSER_EVERY = DAYS['2mo']
+TREND_ANALYSER_EVERY = DAYS['1mo']
 CANDLE_PLOT = False
 POSITIVE_COLOR = 'green'
 NEUTRAL_COLOR = 'orange'
 NEGATIVE_COLOR = 'red'
+
+fundamentals_yf_maps = {'Trailing PE': 'trailingPE',
+                        'Forward PE': 'forwardPE',
+                        'Book Value': 'bookValue',
+                        'Price-To-Book': 'priceToBook',
+                        'Trailing EPS': 'trailingEps',
+                        'Forward EPS': 'forwardEps',
+                        'Recommendation Key': 'recommendationKey',
+                        'Number Of Analyst Opinions': 'numberOfAnalystOpinions',
+                        'Total Debt': 'totalDebt',
+                        'Trailing PEG Ratio': 'trailingPegRatio'}
+
+
+def get_fundamentals(stock_info):
+    fundamentals = {}
+    for name, key in fundamentals_yf_maps.items():
+        if key in stock_info.keys():
+            fundamentals[name] = stock_info[key]
+        else:
+            fundamentals[name] = 'NA'
+    return fundamentals
 
 
 class Stock:
@@ -27,7 +49,7 @@ class Stock:
         self.trend_analyse_every = TREND_ANALYSER_EVERY
         self.fig, self.ax = plt.subplots(2, 1, figsize=FIGURE_DIM)
         self.fig.suptitle(ticker)
-
+        self.display_manager = DisplayWindow(f'STOCK INFO: {ticker}', window_dims=(600, 200))
         self.ticker = ticker
         self.levels = []
         self.processed_till = 0
@@ -35,8 +57,10 @@ class Stock:
         self.rsi_window = 14
         self.current_trend = TREND.NEUTRAL
         self.stock_prices = yf.download(ticker, start=FROM_DATE)
+        self.stock_info = yf.Ticker(ticker).info
         self.rs_indices = pd.Series(data=[50] * self.rsi_window, index=list(self.stock_prices.index[:self.rsi_window]))
         self.working_data = self.stock_prices[:self.processed_till]
+        self.fundamentals = get_fundamentals(self.stock_info)
 
     def process_data(self, show_simulation=True, verbose=True):
         while True:
@@ -48,24 +72,29 @@ class Stock:
                 rsi_score = calculate_rsi(self.working_data['Close'], window_size=self.rsi_window)
                 self.rs_indices = pd.concat([self.rs_indices, rsi_score])
             if self.processed_till > self.trend_analyser_days and self.processed_till % self.trend_analyse_every == 0:
-                trend_samples = self.working_data['Close'][-self.trend_analyser_days::5]
-                self.current_trend = analyse_trend(trend_samples)
+                trend_samples = self.working_data['Close'][-self.trend_analyser_days:]
+                self.current_trend = analyse_trend(trend_samples, verbose)
             if show_simulation:
+                analysis = {'Trend': self.current_trend.name}
+                analysis.update(self.fundamentals)
+                self.display_manager.update(analysis)
                 self.plotter()
             self.working_data = pd.concat(
                 [self.working_data, self.stock_prices[self.processed_till: self.processed_till + 1]])
             self.processed_till += 1
             if self.working_data.shape == self.stock_prices.shape:
                 break
-        print('[INFO] PROCESSED UNTIL', self.working_data.index[-1])
-        print_table(rows=self.levels, headers=['Date', 'Price'])
+        if verbose:
+            print('[INFO] PROCESSED UNTIL', self.working_data.index[-1])
+            print_table(rows=self.levels, headers=['Date', 'Price'])
 
-    def plotter(self, save_path=None):
+    def plotter(self, save_path=None, focus=True):
         if len(self.working_data) == 0 or len(self.rs_indices) == 0:
             return
         below_30 = True if float(self.rs_indices[-1]) <= 30 else False
         above_70 = True if float(self.rs_indices[-1]) >= 70 else False
-        price_color = POSITIVE_COLOR if self.current_trend == TREND.UPWARD else (NEGATIVE_COLOR if self.current_trend == TREND.DOWNWARD else NEUTRAL_COLOR)
+        price_color = POSITIVE_COLOR if self.current_trend == TREND.UPWARD else (
+            NEGATIVE_COLOR if self.current_trend == TREND.DOWNWARD else NEUTRAL_COLOR)
         rsi_color = POSITIVE_COLOR if above_70 else (NEGATIVE_COLOR if below_30 else NEUTRAL_COLOR)
         working_data = self.working_data[-self.focus_window_size:]
         if self.plot_candles:
@@ -82,7 +111,7 @@ class Stock:
             self.ax[0].bar(down.index, down['High'] - down['Open'], width2, bottom=down['Open'], color=NEGATIVE_COLOR)
             self.ax[0].bar(down.index, down['Low'] - down['Close'], width2, bottom=down['Close'], color=NEGATIVE_COLOR)
 
-        self.ax[0].plot(working_data[-self.focus_window_size:]['Close'], c=price_color)
+        self.ax[0].plot(working_data['Close'], c=price_color)
         self.ax[1].plot(self.rs_indices[-self.focus_window_size:], c=rsi_color)
         self.ax[1].axhline(70, c='orange', linestyle='--')
         self.ax[1].axhline(30, c='orange', linestyle='--')
