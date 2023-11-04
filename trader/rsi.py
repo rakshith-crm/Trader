@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def calculate_rsi(stock_price, window_size=14):
-    returns = np.diff(stock_price[-window_size - 1: -1])
+    returns = np.diff(stock_price[-window_size - 1 : -1])
     net_gains = returns[returns > 0]
     net_losses = returns[returns <= 0]
     avg_gains = np.mean(net_gains)

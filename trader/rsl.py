@@ -6,10 +6,11 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 from trader.utils import *
+from trader.processor import Queable
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
-THRESHOLD = 0.001
+THRESHOLD = 0.0001
 
 
 def get_support_resistance_levels(stock_data):
@@ -24,7 +25,9 @@ def get_support_resistance_levels(stock_data):
         silhouette_value = silhouette_score(dataset, labels)
         models.append(model)
         scores.append(silhouette_value)
-    best_model = [model for score, model in sorted(zip(scores, models), reverse=True)][0]
+    best_model = [model for score, model in sorted(zip(scores, models), reverse=True)][
+        0
+    ]
     levels = list(sorted(best_model.cluster_centers_, key=lambda x: x[0]))
     levels_dated = []
     for i in range(len(levels)):
@@ -40,10 +43,14 @@ def filter_levels(levels, current_date, remove_old_levels=False, verbose=False):
     maximum = np.max(price_levels)
     normalized_levels = list((price_levels - minimum) / (maximum - minimum))
 
-    table_data = [[index, level, norm_level] for index, level, norm_level in
-                  zip(range(no_levels), price_levels, normalized_levels)]
+    table_data = [
+        [index, level, norm_level]
+        for index, level, norm_level in zip(
+            range(no_levels), price_levels, normalized_levels
+        )
+    ]
     if verbose:
-        print_table(rows=table_data, headers=['Index', 'Levels', 'Normalized Levels'])
+        print_table(rows=table_data, headers=["Index", "Levels", "Normalized Levels"])
 
     remove_indices = set()
     difference_matrix = np.zeros(shape=(no_levels, no_levels))
@@ -70,5 +77,21 @@ def filter_levels(levels, current_date, remove_old_levels=False, verbose=False):
     for i in range(no_levels):
         levels[i][1] = new_price_levels[i] // counts[i]
     if verbose:
-        print('Removing indices: ', remove_indices, ', values', [price_levels[i] for i in remove_indices])
+        print(
+            "Removing indices: ",
+            remove_indices,
+            ", values",
+            [price_levels[i] for i in remove_indices],
+        )
     return [levels[i] for i in range(len(levels)) if i not in remove_indices]
+
+
+class RSL(Queable):
+    def __init__(self):
+        pass
+
+    def process(self):
+        pass
+
+    def result(self):
+        pass
