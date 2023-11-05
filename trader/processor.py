@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
 
 
-class Queable:
+class Queable(ABC):
     @abstractmethod
     def process(self):
         pass
 
     @abstractmethod
     def result(self):
+        pass
+
+    @abstractmethod
+    def params(self):
         pass
 
 

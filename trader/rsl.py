@@ -1,12 +1,12 @@
 import warnings
-
+import pandas as pd
 import numpy as np
 import yfinance as yf
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-from trader.utils import *
-from trader.processor import Queable
+from .utils import *
+from .processor import Queable
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -86,12 +86,35 @@ def filter_levels(levels, current_date, remove_old_levels=False, verbose=False):
     return [levels[i] for i in range(len(levels)) if i not in remove_indices]
 
 
+COMPUTE_EVERY = DAYS["2wk"]
+
 class RSL(Queable):
-    def __init__(self):
-        pass
+    def __init__(self, stock, window_size=DAYS["1mo"]):
+        self.stock = stock
+        self.processed_till = 0
+        self.period = COMPUTE_EVERY
+        self.levels = []
+        self.window_size = window_size
 
-    def process(self):
-        pass
+    def process(self, verbose=False):
+        data = self.stock.get_data()
+        print(data.shape)
+        if self.processed_till == len(data):
+            return
+        
+        index = (max(self.processed_till, self.window_size) // self.period) * self.period + self.period
 
+        for i in range(index, len(data), self.period):
+            from_ = i - self.window_size
+            to_ = i
+            segment = data[from_: to_]["Close"]
+            self.levels = self.levels + get_support_resistance_levels(segment)
+            self.levels = filter_levels(self.levels, current_date=segment.index[-1], verbose=verbose)
+
+        self.processed_till = len(data)
+        
     def result(self):
+        return self.levels
+
+    def params(self):
         pass

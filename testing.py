@@ -43,6 +43,9 @@ stock.process_data(show_simulation=False, verbose=False)
 stock.plotter(save_dir=f"plots/")
 stock.save_model(save_dir=f"models/")
 stock.print_data_shapes()
+for val in list(stock.moving_average):
+    print(val)
+
 
 # Load model
 # ticker = ticker_codes[0]
@@ -51,3 +54,12 @@ stock.print_data_shapes()
 # stock.process_data(show_simulation=False, verbose=False)
 # stock.plotter(save_path=f"plots/{ticker}")
 # stock.print_data_shapes()
+
+
+# ticker = ticker_codes[0]
+# stock = Stock(ticker=ticker)
+# ma = MA(stock)
+# ma.process()
+# result = ma.result()
+# for res in result:
+#     print(res)

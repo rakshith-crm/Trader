@@ -4,11 +4,12 @@ from datetime import datetime
 import pandas as pd
 import os
 
-from trader.rsi import *
-from trader.rsl import *
-from trader.trend import *
-from trader.display import *
-from trader.ma import *
+from .rsi import *
+from .rsl import *
+from .trend import *
+from .display import *
+from .ma import *
+from .utils import *
 
 FIGURE_DIM = (10, 10)
 FROM_DATE = "2020-01-01"
@@ -34,7 +35,6 @@ fundamentals_yf_maps = {
     "Total Debt": "totalDebt",
     "Trailing PEG Ratio": "trailingPegRatio",
 }
-
 
 def get_fundamentals(stock_info):
     fundamentals = {}
@@ -324,3 +324,24 @@ class Stock:
         print(f"stock.ma.shape: {self.moving_average.shape}")
         print(f"stock.processed_till: {self.processed_till}")
         print(f"stock.working_data.shape: {self.working_data.shape}")
+
+# class Stock:
+#     def __init__(self, ticker) -> None:
+#         self.ticker = ticker
+#         self.stock_data = yf.download(ticker, start=FROM_DATE)
+        
+#     def fundamentals(self):
+#         def get_fundamentals(stock_info):
+#             fundamentals = {}
+#             for name, key in fundamentals_yf_maps.items():
+#                 if key in stock_info.keys():
+#                     fundamentals[name] = stock_info[key]
+#                 else:
+#                     fundamentals[name] = "NA"
+#             return fundamentals
+        
+#         stock_info = yf.Ticker(self.ticker).info
+#         return get_fundamentals(stock_info)
+    
+#     def get_data(self):
+#         return self.stock_data
