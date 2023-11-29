@@ -1,4 +1,4 @@
-from trader.stock import *
+from trader import *
 
 ticker_codes = [
     "YESBANK.NS",
@@ -26,40 +26,38 @@ ticker_codes = [
     "M&M.NS",
 ]
 
-"""
-"""
-
-# for ticker in ticker_codes:
-#     print(f"Processing ticker: {ticker}")
-#     stock = Stock(ticker)
-#     stock.process_data(show_simulation=False, verbose=False)
-#     stock.plotter(save_path=f"plots/{ticker}")
-#     stock.save_model(save_path=f"models/{ticker}")
-
-# Save model
-ticker = ticker_codes[0]
-stock = Stock(ticker, disable_stats=True)
-stock.process_data(show_simulation=False, verbose=False)
-stock.plotter(save_dir=f"plots/")
-stock.save_model(save_dir=f"models/")
-stock.print_data_shapes()
-for val in list(stock.moving_average):
-    print(val)
+MODEL_DIR = "models/"
 
 
-# Load model
-# ticker = ticker_codes[0]
-# stock = Stock(ticker)
-# stock.load_model(f"models/")
-# stock.process_data(show_simulation=False, verbose=False)
-# stock.plotter(save_path=f"plots/{ticker}")
-# stock.print_data_shapes()
+def process_ticker(ticker):
+    print("Processing stock ticker", ticker)
+    stock = Stock(ticker)
+    # processor = Processor.default_processor(stock=stock)
+    processor = Processor.load_processor(stock=stock, dir=MODEL_DIR)
+    processor.process()
+    results = processor.result()
+    trade_quality = processor.quality()
+    processor.save(dir=MODEL_DIR)
+    # print("TRADE QUALITIES")
+    # for key, value in trade_quality.items():
+    #     print(f"| %-10s | %-10s |" % (key, value))
+    plotter = Plotter(layout=(2, 1), row_heights=[0.8, 0.2])
+    index = stock.get_data().index
+    plotter.addCandlestick(stock=stock, row=1, col=1, name=f"Stock {ticker}")
+    plotter.addLine(*results[0], row=1, col=1, name="MA14")
+    plotter.addLine(*results[1], row=1, col=1, name="MA21")
+    plotter.addLine(*results[2], row=1, col=1, name="MA35")
+    plotter.addLine(*results[3], row=2, col=1, name="RSI")
+    plotter.addHorizontalLine(index, 30, row=2, col=1, name="RSI Lower")
+    plotter.addHorizontalLine(index, 70, row=2, col=1, name="RSI Upper")
+
+    for i, level in enumerate(results[4]):
+        plotter.addHorizontalLine(
+            index=index, y_value=level, row=1, col=1, name=f"Level {i}"
+        )
+
+    plotter.save(f"plots/{ticker}")
 
 
-# ticker = ticker_codes[0]
-# stock = Stock(ticker=ticker)
-# ma = MA(stock)
-# ma.process()
-# result = ma.result()
-# for res in result:
-#     print(res)
+for ticker in ticker_codes:
+    process_ticker(ticker=ticker)

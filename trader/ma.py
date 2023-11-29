@@ -1,45 +1,73 @@
 import numpy as np
 import pandas as pd
 
-from .processor import *
+from .queable import Queable
 from .utils import *
-
-def calculate_ma(stock_price, window_size=14):
-    if len(stock_price) < window_size:
-        return None
-    ma = np.mean(stock_price[-window_size:])
-    return pd.Series(data=[ma], index=[stock_price.index[-1]])
+from .stock import Stock
 
 
 class MA(Queable):
-    def __init__(self, stock, window_size=DAYS["2wk"]) -> None:
+    def __init__(self, stock: Stock, window_size=DAYS["2wk"]) -> None:
         self.stock = stock
         self.processed_till = 0
         self.window_size = window_size
-        self.ma_values = [0 for i in range(self.window_size)]
-    
+        self.ma_values = [
+            self.stock.get_data()["Close"][0] for i in range(self.window_size)
+        ]
+        self.trade_quality = None
+
     def process(self):
         data = self.stock.get_data()
-        
+
         if len(data) == self.processed_till:
             return
+        else:
+            print(f"Processing data: count({len(data) - self.processed_till})")
 
         index = max(self.processed_till, self.window_size)
-        print(index)
+
         for i in range(index, len(data)):
             from_ = i - self.window_size
             to_ = i
-            segment = data[from_: to_]["Close"]
+            segment = data[from_:to_]["Close"]
             ma = self.__calculate_ma(segment)
             self.ma_values.append(ma)
 
         self.processed_till = len(data)
 
-    def result(self):
-        return self.ma_values
+        # Check trade quality
+        current_price = self.stock.get_data()["Close"][-1]
+        if are_numbers_close(current_price, self.ma_values[-1]):
+            self.trade_quality = True
+        else:
+            self.trade_quality = False
 
-    def params(self):
-        pass
+    def result(self):
+        return self.stock.get_data().index, self.ma_values
+
+    def to_json(self):
+        params = {
+            "ticker": self.stock.get_ticker(),
+            "processed_till": self.processed_till,
+            "window_size": self.window_size,
+        }
+        values = {"values": self.ma_values, "trade_quality": self.trade_quality}
+        json_model = {}
+        json_model.update(params)
+        json_model.update(values)
+        return json_model
+
+    def load_json(self, json_model):
+        self.processed_till = json_model["processed_till"]
+        self.window_size = json_model["window_size"]
+        self.ma_values = json_model["values"]
+        self.trade_quality = json_model["trade_quality"]
+
+    def type(self):
+        return f"MA-{self.window_size}"
+
+    def description(self):
+        return f"MA: (window_size: {self.window_size}, processed_till: {self.processed_till}, values: {len(self.ma_values)})"
 
     def __calculate_ma(self, data):
         if len(data) < self.window_size:
@@ -47,4 +75,5 @@ class MA(Queable):
         ma = np.mean(data)
         return ma
 
-    
+    def quality(self):
+        return self.trade_quality
