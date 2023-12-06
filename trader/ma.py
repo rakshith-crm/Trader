@@ -1,9 +1,8 @@
 import numpy as np
-import pandas as pd
 
 from .queable import Queable
-from .utils import *
 from .stock import Stock
+from .utils import *
 
 
 class MA(Queable):
@@ -12,7 +11,7 @@ class MA(Queable):
         self.processed_till = 0
         self.window_size = window_size
         self.ma_values = [
-            self.stock.get_data()["Close"][0] for i in range(self.window_size)
+            self.stock.get_data()["Close"][0] for _ in range(self.window_size)
         ]
         self.trade_quality = None
 
@@ -46,12 +45,15 @@ class MA(Queable):
         return self.stock.get_data().index, self.ma_values
 
     def to_json(self):
+        index = list(self.stock.get_data().index.astype(str))
+        if len(index) != len(self.ma_values) or len(index) != len(self.stock.get_data()):
+            print('ERROR IN MA', self.stock.get_ticker())
         params = {
             "ticker": self.stock.get_ticker(),
             "processed_till": self.processed_till,
             "window_size": self.window_size,
         }
-        values = {"values": self.ma_values, "trade_quality": self.trade_quality}
+        values = {"index": index, "values": self.ma_values, "trade_quality": self.trade_quality}
         json_model = {}
         json_model.update(params)
         json_model.update(values)
