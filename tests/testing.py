@@ -1,4 +1,5 @@
 from trader import *
+import os
 
 ticker_codes = [
     "YESBANK.NS",
@@ -26,17 +27,22 @@ ticker_codes = [
     "M&M.NS",
 ]
 
-MODEL_DIR = "models/"
-
+MODEL_DIR = "../models/"
+PLOTS_DIR = "../plots/"
 
 def process_ticker(ticker):
-    print("Processing stock ticker", ticker)
+    print("-" * 150)
+
     stock = Stock(ticker)
+    print(
+        "Processing stock ticker", ticker, "number of datapoints", len(stock.get_data())
+    )
     # processor = Processor.default_processor(stock=stock)
     processor = Processor.load_processor(stock=stock, dir=MODEL_DIR)
     processor.process()
     results = processor.result()
     trade_quality = processor.quality()
+    print(processor.description())
     processor.save(dir=MODEL_DIR)
     # print("TRADE QUALITIES")
     # for key, value in trade_quality.items():
@@ -56,8 +62,12 @@ def process_ticker(ticker):
             index=index, y_value=level, row=1, col=1, name=f"Level {i}"
         )
 
-    plotter.save(f"plots/{ticker}")
+    plotter.save(os.path.join(PLOTS_DIR, ticker))
+    print("-" * 150)
 
+
+# ticker = "UBL.NS"
+# process_ticker(ticker=ticker)
 
 for ticker in ticker_codes:
     process_ticker(ticker=ticker)

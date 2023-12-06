@@ -43,12 +43,15 @@ class RSI(Queable):
         return self.stock.get_data().index, self.rsi_values
 
     def to_json(self):
+        index = list(self.stock.get_data().index.astype(str))
+        if len(index) != len(self.rsi_values) or len(index) != len(self.stock.get_data()):
+            print('ERROR IN RSI', self.stock.get_ticker())
         params = {
             "ticker": self.stock.get_ticker(),
             "processed_till": self.processed_till,
             "window_size": self.window_size,
         }
-        values = {"values": self.rsi_values, "trade_quality": self.trade_quality}
+        values = {"index": index, "values": self.rsi_values, "trade_quality": self.trade_quality}
         json_model = {}
         json_model.update(params)
         json_model.update(values)

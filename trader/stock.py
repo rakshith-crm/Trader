@@ -32,27 +32,17 @@ fundamentals_yf_maps = {
 }
 
 
-def get_fundamentals(stock_info):
-    fundamentals = {}
-    for name, key in fundamentals_yf_maps.items():
-        if key in stock_info.keys():
-            fundamentals[name] = stock_info[key]
-        else:
-            fundamentals[name] = "NA"
-    return fundamentals
-
-
 class Stock:
     def __init__(self, ticker) -> None:
         self.ticker = ticker
         self.stock_data = yf.download(ticker, start=FROM_DATE)
 
     def fundamentals(self):
-        def get_fundamentals(stock_info):
+        def get_fundamentals(stock_information):
             fundamentals = {}
             for name, key in fundamentals_yf_maps.items():
-                if key in stock_info.keys():
-                    fundamentals[name] = stock_info[key]
+                if key in stock_information.keys():
+                    fundamentals[name] = stock_information[key]
                 else:
                     fundamentals[name] = "NA"
             return fundamentals
