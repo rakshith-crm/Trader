@@ -28,7 +28,7 @@ class RSL(Queable):
         if self.processed_till == len(data):
             return
         else:
-            print(f"Processing data: count({len(data) - self.processed_till})")
+            print(f"[INFO] processing: count({len(data) - self.processed_till})")
 
         index = (
             max(self.processed_till, self.window_size) // self.period

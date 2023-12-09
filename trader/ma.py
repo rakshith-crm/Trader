@@ -21,7 +21,7 @@ class MA(Queable):
         if len(data) == self.processed_till:
             return
         else:
-            print(f"Processing data: count({len(data) - self.processed_till})")
+            print(f"[INFO] processing: count({len(data) - self.processed_till})")
 
         index = max(self.processed_till, self.window_size)
 
@@ -53,7 +53,11 @@ class MA(Queable):
             "processed_till": self.processed_till,
             "window_size": self.window_size,
         }
-        values = {"index": index, "values": self.ma_values, "trade_quality": self.trade_quality}
+        series = []
+        for date, value in zip(index, self.ma_values):
+            price = {"date": date, "value": value}
+            series.append(price)
+        values = {"series": series, "trade_quality": self.trade_quality}
         json_model = {}
         json_model.update(params)
         json_model.update(values)
@@ -62,8 +66,12 @@ class MA(Queable):
     def load_json(self, json_model):
         self.processed_till = json_model["processed_till"]
         self.window_size = json_model["window_size"]
-        self.ma_values = json_model["values"]
         self.trade_quality = json_model["trade_quality"]
+        series = json_model["series"]
+        values = []
+        for price in series:
+            values.append(price["value"])
+        self.ma_values = values
 
     def type(self):
         return f"MA-{self.window_size}"

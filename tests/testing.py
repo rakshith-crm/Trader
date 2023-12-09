@@ -27,16 +27,15 @@ ticker_codes = [
     "M&M.NS",
 ]
 
-MODEL_DIR = "../models/"
-PLOTS_DIR = "../plots/"
+MODEL_DIR = "models/"
+PLOTS_DIR = "plots/"
+
 
 def process_ticker(ticker):
     print("-" * 150)
 
     stock = Stock(ticker)
-    print(
-        "Processing stock ticker", ticker, "number of datapoints", len(stock.get_data())
-    )
+    print("Processing stock ticker", ticker, "number of datapoints", len(stock.get_data()))
     # processor = Processor.default_processor(stock=stock)
     processor = Processor.load_processor(stock=stock, dir=MODEL_DIR)
     processor.process()

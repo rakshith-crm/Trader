@@ -4,3 +4,7 @@ TODO
 trader/__pycache__
 .vscode
 models/*
+.DS_Store
+build/
+dist/
+traderpy.egg-info
