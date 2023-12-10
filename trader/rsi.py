@@ -43,8 +43,8 @@ class RSI(Queable):
         return self.stock.get_data().index, self.rsi_values
 
     def to_json(self):
-        index = list(self.stock.get_data().index.astype(str))
-        if len(index) != len(self.rsi_values) or len(index) != len(self.stock.get_data()):
+        stock_index = self.stock.get_data().index
+        if len(stock_index) != len(self.rsi_values) or len(stock_index) != len(self.stock.get_data()):
             print('ERROR IN RSI', self.stock.get_ticker())
         params = {
             "ticker": self.stock.get_ticker(),
@@ -52,9 +52,9 @@ class RSI(Queable):
             "window_size": self.window_size,
         }
         series = []
-        for date, value in zip(index, self.rsi_values):
-            price = {"date": date, "value": value}
-            series.append(price)
+        for date, price in zip(stock_index, self.rsi_values):
+            ts = to_timestamp(date)
+            series.append([ts, price])
         values = {"series": series, "trade_quality": self.trade_quality}
         json_model = {}
         json_model.update(params)
@@ -67,8 +67,8 @@ class RSI(Queable):
         self.trade_quality = json_model["trade_quality"]
         series = json_model["series"]
         values = []
-        for price in series:
-            values.append(price["value"])
+        for date, price in series:
+            values.append(price)
         self.rsi_values = values
 
     def type(self):
