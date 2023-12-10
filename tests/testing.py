@@ -36,16 +36,16 @@ def process_ticker(ticker):
 
     stock = Stock(ticker)
     print("Processing stock ticker", ticker, "number of datapoints", len(stock.get_data()))
-    processor = Processor.default_processor(stock=stock)
-    # processor = Processor.load_processor(stock=stock, dir=MODEL_DIR)
+    # processor = Processor.default_processor(stock=stock)
+    processor = Processor.load_processor(stock=stock, dir=MODEL_DIR)
     processor.process()
     results = processor.result()
     trade_quality = processor.quality()
     print(processor.description())
     processor.save(dir=MODEL_DIR)
-    # print("TRADE QUALITIES")
-    # for key, value in trade_quality.items():
-    #     print(f"| %-10s | %-10s |" % (key, value))
+    print("TRADE QUALITIES")
+    for key, value in trade_quality.items():
+        print(f"| %-10s | %-10s |" % (key, value))
     plotter = Plotter(layout=(2, 1), row_heights=[0.8, 0.2])
     index = stock.get_data().index
     plotter.addCandlestick(stock=stock, row=1, col=1, name=f"Stock {ticker}")
@@ -65,8 +65,8 @@ def process_ticker(ticker):
     print("-" * 150)
 
 
-# ticker = "UBL.NS"
-# process_ticker(ticker=ticker)
+ticker = "UBL.NS"
+process_ticker(ticker=ticker)
 
-for ticker in ticker_codes:
-    process_ticker(ticker=ticker)
+# for ticker in ticker_codes:
+#     process_ticker(ticker=ticker)

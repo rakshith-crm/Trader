@@ -25,7 +25,6 @@ class Processor:
     def process(self):
         for obj in tqdm(self.queue):
             obj.process()
-            self.trade_quality[obj.type()] = obj.quality()
 
     def result(self):
         results = []
@@ -34,6 +33,8 @@ class Processor:
         return results
 
     def quality(self):
+        for obj in self.queue:
+            self.trade_quality[obj.type()] = obj.quality()
         return self.trade_quality
 
     def type(self):

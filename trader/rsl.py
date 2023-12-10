@@ -48,14 +48,6 @@ class RSL(Queable):
 
         self.processed_till = len(data)
 
-        # Check trade quality
-        current_price = self.stock.get_data()["Close"][-1]
-        for date, price in self.levels:
-            if are_numbers_close(price, current_price):
-                self.trade_quality = True
-                return
-        self.trade_quality = False
-
     def result(self):
         level_values = [l[1] for l in self.levels]
         return level_values
@@ -146,4 +138,10 @@ class RSL(Queable):
         return price_levels
 
     def quality(self):
+        current_price = self.stock.get_data()["Close"][-1]
+        for date, price in self.levels:
+            if are_numbers_close(price, current_price):
+                self.trade_quality = True
+                return
+        self.trade_quality = False
         return self.trade_quality

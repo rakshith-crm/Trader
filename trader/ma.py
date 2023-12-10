@@ -35,13 +35,6 @@ class MA(Queable):
 
         self.processed_till = len(data)
 
-        # Check trade quality
-        current_price = self.stock.get_data()["Close"][-1]
-        if are_numbers_close(current_price, self.ma_values[-1]):
-            self.trade_quality = True
-        else:
-            self.trade_quality = False
-
     def result(self):
         return self.stock.get_data().index, self.ma_values
 
@@ -87,4 +80,9 @@ class MA(Queable):
         return ma
 
     def quality(self):
+        current_price = self.stock.get_data()["Close"][-1]
+        if are_numbers_close(current_price, self.ma_values[-1]):
+            self.trade_quality = True
+        else:
+            self.trade_quality = False
         return self.trade_quality

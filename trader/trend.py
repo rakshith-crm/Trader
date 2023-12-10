@@ -23,11 +23,6 @@ class Trend(Queable):
         sliced_prices = self.stock.get_data()[-self.window_size :]["Close"]
         self.trend = self.__analyse_trend(sliced_prices)
 
-        if self.trend == TREND.UPWARD:
-            self.trade_quality = True
-        else:
-            self.trade_quality = False
-
     def result(self):
         return self.trend
 
@@ -56,6 +51,10 @@ class Trend(Queable):
         return f"Trend: (window_size: {self.window_size})"
 
     def quality(self):
+        if self.trend == TREND.UPWARD:
+            self.trade_quality = True
+        else:
+            self.trade_quality = False
         return self.trade_quality
 
     def __analyse_trend(self, prices, verbose=False):
