@@ -5,7 +5,7 @@ with open('README.md') as file:
 
 setup(
     name="traderpy",
-    version="1.0.5",
+    version="1.0.6",
     packages=find_packages(),
     install_requires=[
         'yfinance',

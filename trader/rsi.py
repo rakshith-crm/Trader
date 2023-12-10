@@ -32,13 +32,6 @@ class RSI(Queable):
 
         self.processed_till = len(data)
 
-        # Check trade quality
-        current_price = self.stock.get_data()["Close"][-1]
-        if are_numbers_close(self.rsi_values[-1], current_price):
-            self.trade_quality = True
-        else:
-            self.trade_quality = False
-
     def result(self):
         return self.stock.get_data().index, self.rsi_values
 
@@ -88,4 +81,9 @@ class RSI(Queable):
         return rsi_value
 
     def quality(self):
+        current_price = self.stock.get_data()["Close"][-1]
+        if are_numbers_close(self.rsi_values[-1], current_price):
+            self.trade_quality = True
+        else:
+            self.trade_quality = False
         return self.trade_quality
