@@ -62,7 +62,11 @@ class Stock:
         low = self.stock_data["Low"]
         close = self.stock_data["Close"]
         values = list(zip(open, high, low, close))
-        return {"ticker": self.ticker, "series": values}
+        series = []
+        for date, value in zip(self.stock_data.index, values):
+            ts = to_timestamp(date)
+            series.append([ts, value])
+        return {"ticker": self.ticker, "series": series}
 
     def load_json(self):
         pass

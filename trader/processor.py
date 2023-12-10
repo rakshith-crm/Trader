@@ -100,6 +100,8 @@ class Processor:
 
         processor = Processor(stock=stock)
         for obj_key in model.keys():
+            if obj_key == "stock":
+                continue
             qobj_type, window_size = obj_key.split("-")
             window_size = int(window_size)
             obj = queable_registry[qobj_type](stock, window_size)
