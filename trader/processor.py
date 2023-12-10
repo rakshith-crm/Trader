@@ -50,6 +50,8 @@ class Processor:
         model = {}
         for obj in self.queue:
             model[obj.type()] = obj.to_json()
+        stock_json = self.stock.to_json()
+        model["stock"] = stock_json
         return model
 
     def save(self, dir):

@@ -1,7 +1,7 @@
 import json
 import os
 from trader import Stock
-MODEL_DIR = 'models2/'
+MODEL_DIR = 'models/'
 
 
 def check_models_are_latest():
@@ -22,26 +22,4 @@ def check_models_are_latest():
         print('MODELS ARE LATEST')
 
 
-def check_models_correctness():
-    has_error = False
-    model1 = 'models/AAPL.json'
-    model2 = 'models2/AAPL.json'
-    with open(model1) as file:
-        json_model1 = json.load(file)
-    with open(model2) as file:
-        json_model2 = json.load(file)
-    series = json_model2["RSI-14"]["series"]
-    values_true = json_model1["RSI-14"]["values"]
-    values_check = []
-    for price in series:
-        values_check.append(price["value"])
-    for v1, v2 in zip(values_true, values_check):
-        if v1 != v2:
-            has_error = True
-            print('NOT EQUAL')
-    if not has_error:
-        print("ALL GOOD")
-
-
-check_models_correctness()
 check_models_are_latest()

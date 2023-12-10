@@ -69,9 +69,10 @@ class RSL(Queable):
         }
         levels_string = []
         for date, price in self.levels:
-            level = [date.strftime("%Y-%m-%d"), price]
+            ts = to_timestamp(date)
+            level = [ts, price]
             levels_string.append(level)
-        values = {"values": levels_string, "trade_quality": self.trade_quality}
+        values = {"levels": levels_string, "trade_quality": self.trade_quality}
         json_model = {}
         json_model.update(params)
         json_model.update(values)
@@ -82,10 +83,10 @@ class RSL(Queable):
         self.period = json_model["period"]
         self.window_size = json_model["window_size"]
         self.trade_quality = json_model["trade_quality"]
-        price_levels = json_model["values"]
+        price_levels = json_model["levels"]
         levels = []
         for date, price in price_levels:
-            level = [pd.to_datetime(date), price]
+            level = [to_datetime(date), price]
             levels.append(level)
         self.levels = levels
 

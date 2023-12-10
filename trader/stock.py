@@ -55,3 +55,15 @@ class Stock:
 
     def get_ticker(self):
         return self.ticker
+
+    def to_json(self):
+        open = self.stock_data["Open"]
+        high = self.stock_data["High"]
+        low = self.stock_data["Low"]
+        close = self.stock_data["Close"]
+        values = list(zip(open, high, low, close))
+        return {"ticker": self.ticker, "series": values}
+
+    def load_json(self):
+        pass
+
