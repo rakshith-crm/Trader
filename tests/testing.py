@@ -36,8 +36,8 @@ def process_ticker(ticker):
 
     stock = Stock(ticker)
     print("Processing stock ticker", ticker, "number of datapoints", len(stock.get_data()))
-    # processor = Processor.default_processor(stock=stock)
-    processor = Processor.load_processor(stock=stock, dir=MODEL_DIR)
+    processor = Processor.default_processor(stock=stock)
+    # processor = Processor.load_processor(stock=stock, dir=MODEL_DIR)
     processor.process()
     results = processor.result()
     trade_quality = processor.quality()

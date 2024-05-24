@@ -26,7 +26,7 @@ def are_numbers_close(number1, number2):
     relative_difference = absolute_difference / average
 
     # Define a threshold for closeness (e.g., 0.1 for 10%)
-    threshold = 0.03  # Adjust this threshold as needed
+    threshold = 0.015  # Adjust this threshold as needed
 
     if relative_difference < threshold:
         return True

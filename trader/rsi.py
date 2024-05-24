@@ -81,9 +81,7 @@ class RSI(Queable):
         return rsi_value
 
     def quality(self):
-        current_price = self.stock.get_data()["Close"][-1]
-        if are_numbers_close(self.rsi_values[-1], current_price):
+        self.trade_quality = False
+        if self.rsi_values[-1] > 70:
             self.trade_quality = True
-        else:
-            self.trade_quality = False
         return self.trade_quality

@@ -8,7 +8,7 @@ from .utils import DAYS
 
 
 class Plotter:
-    def __init__(self, layout, row_heights=[], focus=DAYS["3mo"]):
+    def __init__(self, layout, row_heights=[], focus=DAYS["6mo"]):
         self.fig = sp.make_subplots(
             rows=layout[0], cols=layout[1], row_heights=row_heights, shared_xaxes=True
         )

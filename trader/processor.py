@@ -25,6 +25,7 @@ class Processor:
     def process(self):
         for obj in tqdm(self.queue):
             obj.process()
+            obj.quality()
 
     def result(self):
         results = []
